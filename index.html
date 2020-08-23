@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Image Puzzle Game</title>
+		<style>
+			body {
+				font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+				background-color: #00FA9A;
+				margin:0;
+			}
+			h2{
+				font-weight:normal;
+				text-align:center;
+				color:blue;
+				font-size: 45px;
+			}
+			h3{
+				font-weight:normal;
+				margin:6px 10px;
+				text-align:center;
+			}
+			#contaner hr{
+				border-top:3px solid #f5f2f2;
+				height:5px;
+				border:none;
+			}
+			#contaner #Player_Panel {
+				background-color:#1a8cff;
+				max-width:1000px;
+				width:95%;
+				padding:10px 0px;
+				margin: 10px auto;
+				border-radius: 40px;
+			}
+			#contaner #Original_Image {
+				display: inline-block;
+				width:300px;
+				font-size:20px;
+				padding: 60px;
+				margin: 10px 10px;
+			}
+			#contaner #time_Box {
+				display:inline-block;
+				width:80%;
+				font-size: 20px;
+			}
+			#contaner img#actual_Image{
+				border:2px solid #a46;
+				height:300px;
+				width:300px;
+			}
+			#contaner #sortable {
+				padding: 0;
+				width: 400px;
+				border:2px solid #a46;
+				list-style-type: none;
+				display: inline-block;
+				margin: 10px;
+				
+			}
+			#contaner #sortable li {
+				background-size: 400% 400%;
+				border: none;
+				width: 100px;
+				height: 100px;
+				cursor: pointer;
+				margin: 0;
+				padding: 0;
+				float: left;
+				
+			}
+			#contaner button {
+				background-color:#1aff1a;
+				border:2px solid #cce;
+				display: inline;
+				font-size: 14px;
+				padding: 5px 8px;
+				border-radius: 30px;
+			}
+		</style>
+		<script>
+				// variable declaration
+				var timer_function;
+				var Image_Puzzle = {
+					startTime: new Date().getTime(),
+					/*
+					function for starting the game
+					*/
+					startGame: function (images, grid_size) {
+						this.setImage(images, grid_size);
+						helper.doc('Player_Panel').style.display = 'block';
+						helper.shuffle('sortable');
+						this.startTime = new Date().getTime();
+						this.tick();
+						},
+
+					/*
+					function for seconds count
+					*/
+					tick: function () {
+						var now = new Date().getTime();
+						var elapsedTime = parseInt((now - Image_Puzzle.startTime) / 1000, 10);
+						helper.doc('timerPanel').textContent = elapsedTime;
+						timer_function = setTimeout(Image_Puzzle.tick, 1000);
+						},
+
+					/* 
+					Function for setting the images
+					*/
+					setImage: function (images, grid_size = 4) {
+						var percentage = 100 / (grid_size - 1);
+						var image = images[Math.floor(Math.random() * images.length)];
+						helper.doc('imgTitle').innerHTML = image.title;
+						helper.doc('actual_Image').setAttribute('src', image.src);
+						helper.doc('sortable').innerHTML = '';
+						for (var i = 0; i < grid_size * grid_size; i++) {
+							var xpos = (percentage * (i % grid_size)) + '%';
+							var ypos = (percentage * Math.floor(i / grid_size)) + '%';
+							let li = document.createElement('li');
+							li.id = i;
+							li.setAttribute('data-value', i);
+							li.style.backgroundImage = 'url(' + image.src + ')';
+							li.style.backgroundSize = (grid_size * 100) + '%';
+							li.style.backgroundPosition = xpos + ' ' + ypos;
+							li.style.width = 400 / grid_size + 'px';
+							li.style.height = 400 / grid_size + 'px';
+							li.setAttribute('draggable', 'true');
+							li.ondragstart = (event) => event.dataTransfer.setData('data', event.target.id);
+							li.ondragover = (event) => event.preventDefault();
+							li.ondrop = (event) => {
+								let origin = helper.doc(event.dataTransfer.getData('data'));
+								let dest = helper.doc(event.target.id);
+								let p = dest.parentNode;
+								if (origin && dest && p) {
+									let temp = dest.nextSibling;
+									p.insertBefore(dest, origin);
+									p.insertBefore(origin, temp);
+									let vals = Array.from(helper.doc('sortable').children).map(x => x.id);
+									var now = new Date().getTime();
+									document.querySelector('.timeCount').textContent = (parseInt((now - Image_Puzzle.startTime) / 1000, 10));
+									if (isSorted(vals)) {
+										helper.doc('Original_Image').innerHTML = helper.doc('gameOver').innerHTML;
+										}
+									}
+								};
+							li.setAttribute('dragstart', 'true');
+							helper.doc('sortable').appendChild(li);
+							}
+						helper.shuffle('sortable');
+						}
+					};
+					/*
+					checking wether the image is rearranges properly or not
+					*/
+					isSorted = (arr) => arr.every((elem, index) => { return elem == index; });
+					var helper = {
+						doc: (id) => document.getElementById(id) || document.createElement("div"),
+						shuffle: (id) => {
+						var ul = document.getElementById(id);
+						for (var i = ul.children.length; i >= 0; i--) {
+							ul.appendChild(ul.children[Math.random() * i | 0]);
+							}
+						}
+					}
+
+					/*
+					variable for storing the information of images
+					*/
+					var images = [{ src: 'images/earth.png', title: 'Earth Image' },{ src: 'images/emojy.jpeg', title: 'Smiley Emojy' },{ src: 'images/woolfs.jpeg', title: 'Woolf' }];
+
+					window.onload = function () {
+						var grid_size = document.querySelector('#level_Panel input[type="radio"]:checked').getAttribute('value');
+						Image_Puzzle.startGame(images, grid_size);};
+						function restart() {
+							var grid_size = document.querySelector('#level_Panel input[type="radio"]:checked').getAttribute('value');
+							Image_Puzzle.startGame(images, grid_size);
+							}
+						function rules() {
+							alert('Re arrange the image parts in a way that it correctly forms he picture. \nThe no. of steps taken will be counted.');
+						}
+			</script>
+	</head>
+	<body>
+		<!-- Main Container-->
+		<div id="contaner">
+			<h2>Image Puzzle Game</h2>
+			<hr />
+			<!-- Player Panel-->
+			<div id="Player_Panel" style="padding:5px;display:none;">
+				<h3 id="imgTitle"></h3>
+				<hr />
+				<div style="display:inline-block; margin:auto; width:95%; vertical-align:top;">
+					<ul id="sortable" class="sortable"></ul>
+					<!-- Original image Container -->
+					<div id="Original_Image">
+						<!-- Show Time Details -->
+						<div id="time_Box">
+							<p>Time Taken: <span id="timerPanel"></span> secs</p>
+						</div>
+						<img id="actual_Image" />
+						<div>Re-arrange to create a picture like this.</div>
+						<p> Set Level </p>
+						<p id="level_Panel">
+							<!-- Radio Button Section for Setting the level -->
+							<input type="radio" name="level" id="easy" checked="checked" value="3" onchange="Image_Puzzle.startGame(images, this.value);"/> 
+							<label for="easy">Easy</label>
+							<input type="radio" name="level" id="medium" value="4" onchange="Image_Puzzle.startGame(images, this.value);" />
+							<label for="medium">Medium</label>
+							<input type="radio" name="level" id="hard" value="5" onchange="Image_Puzzle.startGame(images, this.value);" />
+							<label for="hard">Hard</label>
+						</p>
+					<div>
+					<!-- Button for Changig Images-->
+					<button id="newPhoto" type="button" class="btn" onclick="restart();">Change Image</button>	
+					<!-- Button for rules-->
+					<button id="btnRule" type="button" class="btn" onclick="rules();">Rules</button>
+				</div>
+			</div>
+		</div>
+		</div>
+		<!-- 
+			game Over Status
+		-->
+		<div id="gameOver" style="display:none;">
+			<div style="background-color: #fc9e9e; padding: 5px 10px 20px 10px; text-align: center; ">
+				<h2 style="text-align:center">Game Over!!</h2>
+				<h3>Congratulations!! <br /> You have completed this picture.
+				<br /> Time Taken: <span class="timeCount">0</span> seconds<br /></h3>
+			<div>
+			<!-- Button for Play Again -->
+			<button type="button" onclick="window.location.reload(true);">Play Again</button>
+		</div>
+		</div>
+		</div>
+			
+		</div>
+	</body>
+</html>
